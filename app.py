@@ -22,7 +22,7 @@ app.title = 'NYC 311 construction complaints'
 from flask import Blueprint
 
 # a random blueprint
-from .myblueprint import myblueprint as my_blueprint
+from myblueprint import myblueprint as my_blueprint
 app.register_blueprint(my_blueprint) # notice I've defined url_prefix in the Blueprint definition. You can do it at registration time, it's up to you
 #Close block
 
