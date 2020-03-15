@@ -14,7 +14,6 @@ from plotly import graph_objs as go
 from plotly import graph_objs as go
 from plotly.graph_objs import *
 from dash.dependencies import Input, Output, State
-import flask
 
 server = flask.Flask(__name__)
 app = dash.Dash(__name__, server=server)
@@ -26,6 +25,7 @@ app.title = 'NYC 311 construction complaints'
 #Blueprint error
 
 # a random blueprint
+from myblueprint import myblueprint as my_blueprint
 #Close block
 
 layout_map = dict(
