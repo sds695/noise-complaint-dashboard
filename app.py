@@ -8,22 +8,23 @@ import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point, MultiPoint
 from sodapy import Socrata
+from flask import Blueprint
 from plotly import graph_objs as go
 
 from plotly import graph_objs as go
 from plotly.graph_objs import *
 from dash.dependencies import Input, Output, State
 
-app = dash.Dash(__name__)
-server = app.server
+server = flask.Flask(__name__)
+app = dash.Dash(__name__, server=server)
+
+# app = dash.Dash(__name__)
+# server = app.server
 app.title = 'NYC 311 construction complaints'
 
 #Blueprint error
-from flask import Blueprint
 
 # a random blueprint
-from myblueprint import myblueprint as my_blueprint
-app.register_blueprint(my_blueprint) # notice I've defined url_prefix in the Blueprint definition. You can do it at registration time, it's up to you
 #Close block
 
 layout_map = dict(
