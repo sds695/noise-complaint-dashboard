@@ -22,8 +22,6 @@ server = flask.Flask(__name__)
 
 # app = dash.Dash(__name__)
 # server = app.server
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets,server=server)
-app.title = 'NYC 311 construction complaints'
 
 #Blueprint error
 
@@ -139,7 +137,8 @@ def generate_table(dataframe, max_rows=10):
 # app.css.append_css({'external_url': 'https://codepen.io/amyoshino/pen/jzXypZ.css'})
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,server=server)
+app.title = 'NYC 311 construction complaints'
 
 layout_table = dict(
     autosize=True,
