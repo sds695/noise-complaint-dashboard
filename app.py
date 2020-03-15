@@ -72,8 +72,8 @@ def return_complaint_data(start=None, end=None, searchstr='Noise', agency='DEP',
     filter_statement = 'starts_with(complaint_type, "' + searchstr + '")' + \
                        ' and created_date > "' + start + '"' + \
                        ' and created_date < "' + end + '"' + \
-                       ' and agency = "' + agency + '"' + \
-                       ' and ' + str(range_str) + '(location, ' + str(location_data) + ')'
+                       ' and agency = "' + agency + '"' #+ \
+                       #' and ' + str(range_str) + '(location, ' + str(location_data) + ')'
     select_statement = 'created_date,closed_date,agency,agency_name,complaint_type,descriptor,location_type,' \
                        'incident_zip,city,borough,' \
                        'status,due_date,latitude,' \
