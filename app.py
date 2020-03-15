@@ -14,6 +14,7 @@ from plotly import graph_objs as go
 from plotly import graph_objs as go
 from plotly.graph_objs import *
 from dash.dependencies import Input, Output, State
+import flask
 
 server = flask.Flask(__name__)
 app = dash.Dash(__name__, server=server)
