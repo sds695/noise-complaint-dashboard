@@ -546,15 +546,97 @@ def update_selected_row_indices(type, borough):
 #     rows = test_df.to_dict('records')
 #     return rows
 
+# Working map-graph
+# @app.callback(
+#     Output('map-graph', 'figure'),
+#     [Input('datatable', 'data'),
+#      Input('datatable', 'selected_rows'),
+#      Input('bar-graph1', 'selectedData'),
+#      Input('heatmap', 'relayoutData')])
+# def map_selection(rows, selected_row_indices, date_filter, heatmap_filter):
+#     if date_filter is None:
+#         aux = pd.DataFrame(rows)
+#         if selected_row_indices is None:
+#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
+#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],aux)
+#         elif len(selected_row_indices) == 0:
+#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
+#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],aux)
+#         else:
+#             temp_df = aux[aux.index.isin(selected_row_indices)]
+#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
+#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],temp_df)
+#     else:
+#         print(date_filter)
+#         if heatmap_filter is None:
+#             pass
+#         else:
+#             print('Heatmap selected ' + str(heatmap_filter))
+#             heatmap_selected_startdate = str(dict(heatmap_filter)['xaxis.range[0]']).split(' ')[0]
+#             heatmap_selected_enddate = str(dict(heatmap_filter)['xaxis.range[1]']).split(' ')[0]
+#             print(heatmap_selected_startdate)
+#         aux = pd.DataFrame(rows)
+#         selected_dates = [(point["x"]) for point in date_filter["points"]]
+#         print()
+#         if selected_row_indices is None:
+#             # return gen_lines(
+#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#             #     aux, min(selected_dates), max(selected_dates))
+#             return gen_lines(
+#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#                 aux, heatmap_selected_startdate, heatmap_selected_enddate)
+#         elif len(selected_row_indices) == 0:
+#             # return gen_lines(
+#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#             #     aux, min(selected_dates), max(selected_dates))
+#             return gen_lines(
+#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#                 aux, heatmap_selected_startdate, heatmap_selected_enddate)
+#         else:
+#             temp_df = aux[aux.index.isin(selected_row_indices)]
+#             # return gen_lines(
+#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#             #     temp_df, min(selected_dates), max(selected_dates))
+#             return gen_lines(
+#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+#                 temp_df, heatmap_selected_startdate, heatmap_selected_enddate)
 
 @app.callback(
     Output('map-graph', 'figure'),
     [Input('datatable', 'data'),
      Input('datatable', 'selected_rows'),
-     Input('bar-graph1', 'selectedData'),
      Input('heatmap', 'relayoutData')])
-def map_selection(rows, selected_row_indices, date_filter, heatmap_filter):
-    if date_filter is None:
+def map_selection(rows, selected_row_indices, heatmap_filter):
+    try:
+        print('Heatmap selected ' + str(heatmap_filter))
+        heatmap_selected_startdate = str(dict(heatmap_filter)['xaxis.range[0]']).split(' ')[0]
+        heatmap_selected_enddate = str(dict(heatmap_filter)['xaxis.range[1]']).split(' ')[0]
+        print(heatmap_selected_startdate)
+        aux = pd.DataFrame(rows)
+        print()
+        if selected_row_indices is None:
+            return gen_lines(
+                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+                aux, heatmap_selected_startdate, heatmap_selected_enddate)
+        elif len(selected_row_indices) == 0:
+            return gen_lines(
+                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+                aux, heatmap_selected_startdate, heatmap_selected_enddate)
+        else:
+            temp_df = aux[aux.index.isin(selected_row_indices)]
+            return gen_lines(
+                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
+                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
+                temp_df, heatmap_selected_startdate, heatmap_selected_enddate)
+    except:
         aux = pd.DataFrame(rows)
         if selected_row_indices is None:
             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
@@ -566,46 +648,8 @@ def map_selection(rows, selected_row_indices, date_filter, heatmap_filter):
             temp_df = aux[aux.index.isin(selected_row_indices)]
             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],temp_df)
-    else:
-        print(date_filter)
-        if heatmap_filter is None:
-            pass
-        else:
-            print('Heatmap selected ' + str(heatmap_filter))
-            heatmap_selected_startdate = str(dict(heatmap_filter)['xaxis.range[0]']).split(' ')[0]
-            heatmap_selected_enddate = str(dict(heatmap_filter)['xaxis.range[1]']).split(' ')[0]
-            print(heatmap_selected_startdate)
-        aux = pd.DataFrame(rows)
-        selected_dates = [(point["x"]) for point in date_filter["points"]]
-        print()
-        if selected_row_indices is None:
-            return gen_lines(
-                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-                aux, min(selected_dates), max(selected_dates))
-            # return gen_lines(
-            #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-            #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-            #     aux, heatmap_selected_startdate, heatmap_selected_enddate)
-        elif len(selected_row_indices) == 0:
-            return gen_lines(
-                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-                aux, min(selected_dates), max(selected_dates))
-            # return gen_lines(
-            #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-            #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-            #     aux, heatmap_selected_startdate, heatmap_selected_enddate)
-        else:
-            temp_df = aux[aux.index.isin(selected_row_indices)]
-            return gen_lines(
-                [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-                [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-                temp_df, min(selected_dates), max(selected_dates))
-            # return gen_lines(
-            #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-            #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-            #     temp_df, heatmap_selected_startdate, heatmap_selected_enddate)
+
+
 # @app.callback(
 #     Output('bar-graph', 'figure'),
 #     [Input('datatable', 'data'),
