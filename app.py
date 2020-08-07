@@ -1,4 +1,5 @@
 import dash
+import time
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dt
@@ -116,7 +117,8 @@ def return_complaint_data(start=None, end=None, searchstr='Noise', agency='DEP',
     complaints = pd.DataFrame.from_dict(results)
 
     complaints['complaint_code'] = complaints['descriptor'].apply(lambda x: x.split(' ')[-1].strip('(').strip(')'))
-    complaints['cleaned_descriptor'] = complaints['descriptor'].apply(lambda x: x.replace('Noise: ','').replace('Noise, ',''))
+    complaints['cleaned_descriptor'] = complaints['descriptor']\
+        .apply(lambda x: x.replace('Noise: ','').replace('Noise, ','').strip(' '))
     complaints['created_date'] = pd.to_datetime(complaints['created_date'])
     complaints['created_date_wo_time'] = complaints['created_date'].apply(lambda x: x.date())
     complaints['lonlat'] = list(zip(complaints.longitude.astype(float), complaints.latitude.astype(float)))
@@ -423,7 +425,14 @@ app.layout = html.Div(
                         
                         ''',
                         className='nine columns'
-                )
+                ),
+                html.Div([dcc.RadioItems(id='radio-button',
+                    options=[
+                        {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
+                        {'label': 'Regular Heatmap', 'value': 'MTL'}
+                    ],
+                    value='MTL'
+                )], className= "nine columns")
             ], className="row"
         ),
 
@@ -478,36 +487,43 @@ html.Div(
                     ], className="six columns"
                 ),
 #Testing
-            html.Div([
-                dcc.Graph(id='heatmap')
-                # dash_table.DataTable(
-                #     id='datatable1',
-                #     columns=[{"name": i, "id": i} for i in test_df.columns],
-                #     data=test_df.to_dict('records'),
-                #     style_table={ 'height': 'auto',
-                #         'overflowY': 'scroll',
-                #         'margin-top': '20'
-                #     })
-                     ], className= "six columns"
-            )
+            html.Div([dcc.Loading(id="loading-icon2",
+                children=[dcc.Graph(id='bar-graph',
+                          animate = False,
+                                    style = {'margin-top': '20'})
+],type="default")], className="six columns"),
+            # html.Div([dcc.Graph(id='bar-graph',
+            #       animate=False,
+            #       style={'margin-top': '20'})
+            #          ], className= "six columns"
+            # )
 #Testing block closed
         ],className='row',
         style = {"margin-top":20}),
 #Testing block
-html.Div([html.Div(
-    [
-            dcc.Graph(id='bar-graph1',
-            animate=False,
-            style={'margin-top': '20'})
-    ],className='six columns'
-),
-html.Div(
-    [
-        dcc.Graph(id='bar-graph',
-                  animate=False,
-                  style={'margin-top': '20'})
-    ], className="six columns"
-)],className='row'),
+# Working previous block
+# html.Div([html.Div(
+#     [
+#             dcc.Graph(id='bar-graph1',
+#             animate=False,
+#             style={'margin-top': '20'})
+#     ],className='six columns'
+# ),
+# html.Div(
+#     [
+#         dcc.Graph(id='bar-graph',
+#                   animate=False,
+#                   style={'margin-top': '20'})
+#     ], className="six columns"
+# )],className='row'),
+# \Working previous block
+html.Div([dcc.Loading(id="loading-icon1",
+        children=[dcc.Graph(id='heatmap')],type="default")], className='row'),
+
+# html.Div([
+#     html.Div([dcc.Graph(id='heatmap')])
+#           ],className='row'),
+
 html.Div(
     dash_table.DataTable(
     id='datatable',
@@ -611,14 +627,18 @@ def update_selected_row_indices(type, borough):
     Output('map-graph', 'figure'),
     [Input('datatable', 'data'),
      Input('datatable', 'selected_rows'),
-     Input('heatmap', 'relayoutData')])
-def map_selection(rows, selected_row_indices, heatmap_filter):
+     Input('heatmap', 'relayoutData'),
+     Input('bar-graph', 'selectedData')])
+def map_selection(rows, selected_row_indices, heatmap_filter, type_filter):
     try:
         print('Heatmap selected ' + str(heatmap_filter))
         heatmap_selected_startdate = str(dict(heatmap_filter)['xaxis.range[0]']).split(' ')[0]
         heatmap_selected_enddate = str(dict(heatmap_filter)['xaxis.range[1]']).split(' ')[0]
         print(heatmap_selected_startdate)
         aux = pd.DataFrame(rows)
+        if type_filter is not None:
+            selected_dates = [(point["y"]) for point in type_filter["points"]]
+            aux = aux[aux['cleaned_descriptor'].isin(selected_dates)]
         print()
         if selected_row_indices is None:
             return gen_lines(
@@ -638,6 +658,9 @@ def map_selection(rows, selected_row_indices, heatmap_filter):
                 temp_df, heatmap_selected_startdate, heatmap_selected_enddate)
     except:
         aux = pd.DataFrame(rows)
+        if type_filter is not None:
+            selected_dates = [(point["y"]) for point in type_filter["points"]]
+            aux = aux[aux['cleaned_descriptor'].isin(selected_dates)]
         if selected_row_indices is None:
             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],aux)
@@ -696,9 +719,24 @@ def map_selection(rows, selected_row_indices, heatmap_filter):
 @app.callback(
     Output('bar-graph', 'figure'),
     [Input('map-graph', 'selectedData'),
-     Input('datatable', 'data')])
-def update_figure(rows, dataframe):
-    aux = pd.DataFrame(dataframe)
+     Input('datatable', 'data'),
+     Input('map-graph', 'relayoutData')])
+def update_figure(rows, dataframe, x):
+
+    try:
+        latitude = [float(i[1]) for i in dict(x)['mapbox._derived']['coordinates']]
+        longitude = [float(i[0]) for i in dict(x)['mapbox._derived']['coordinates']]
+        aux = pd.DataFrame(dataframe)
+        aux.dropna(subset=['latitude'],inplace=True)
+        aux['latitude'] = aux['latitude'].apply(lambda rec: float(rec))
+        aux['longitude'] = aux['longitude'].apply(lambda rec: float(rec))
+        aux = aux[(aux['latitude'] > min(latitude)) & (aux['latitude'] < max(latitude)) &
+                  (aux['longitude'] > min(longitude)) & (aux['longitude'] < max(longitude))]
+
+    except:
+        aux = pd.DataFrame(dataframe)
+        pass
+    # aux = pd.DataFrame(dataframe)
     if rows is None:
         temp_df = aux
     else:
@@ -708,6 +746,7 @@ def update_figure(rows, dataframe):
 
         temp_df = aux[aux.index.isin(selected_row_indices)]
     layout = go.Layout(
+        clickmode='event+select',
         bargap=0.05,
         bargroupgap=0,
         barmode='group',
@@ -729,12 +768,22 @@ def update_figure(rows, dataframe):
         )
     )
 
+    print(set(temp_df.groupby('cleaned_descriptor', as_index = False).count()['cleaned_descriptor']))
+    print(temp_df.groupby('cleaned_descriptor', as_index = False).count().columns)
+    grouped_df = temp_df.groupby('cleaned_descriptor', as_index = False).count()
+    grouped_df['descriptor_categories'] = 0
+    for index, i in grouped_df.iterrows():
+        if i['cleaned_descriptor'] in ['Jack Hammering (NC2)', 'Construction Equipment (NC1)',
+                                       'Construction Before/After Hours (NM1)']:
+            grouped_df['descriptor_categories'].loc[index] = 1
     data = Data([
          go.Bar(
-             x=temp_df.groupby('cleaned_descriptor', as_index = False).count().sort_values(by=['latitude'],ascending=True)['latitude'],
-             y=temp_df.groupby('cleaned_descriptor', as_index = False).count().sort_values(by=['latitude'],ascending=True)['cleaned_descriptor'],
+             x = grouped_df.sort_values(by=['descriptor_categories'], ascending=True)['latitude'],
+             y = grouped_df.sort_values(by=['descriptor_categories'], ascending=True)['cleaned_descriptor'],
+             # x=temp_df.groupby('cleaned_descriptor', as_index = False).count().sort_values(by=['latitude'],ascending=True)['latitude'],
+             # y=temp_df.groupby('cleaned_descriptor', as_index = False).count().sort_values(by=['latitude'],ascending=True)['cleaned_descriptor'],
              orientation='h',
-             text=temp_df.groupby('cleaned_descriptor', as_index = False).count().sort_values(by=['latitude'],ascending=True)['latitude'],
+             text=grouped_df.sort_values(by=['descriptor_categories'], ascending=True)['latitude'],
              textposition='auto'
          )
      ])
@@ -770,56 +819,58 @@ def update_figure(rows, dataframe):
 #         return("The number of complaints are" + str(len(temp_df)))
 
 
-@app.callback(
-    Output('bar-graph1', 'figure'),
-    [Input('map-graph', 'selectedData'),
-     Input('datatable', 'data')])
-def update_figure(rows,dataframe):
-    aux = pd.DataFrame(dataframe)
-    if rows is None:
-        temp_df = aux
-    else:
-        selected_row_indices = []
-        for i in rows['points']:
-            selected_row_indices.append(i['pointIndex'])
-
-        temp_df = aux[aux.index.isin(selected_row_indices)]
-    layout = go.Layout(
-        bargap=0.05,
-        bargroupgap=0,
-        barmode='group',
-        showlegend=False,
-        title='Complaints grouped by date',
-        dragmode="select",
-        xaxis=dict(
-            showgrid=False,
-            nticks=50,
-            fixedrange=False
-        ),
-        yaxis=dict(
-            showticklabels=True,
-            showgrid=False,
-            fixedrange=False,
-            rangemode='nonnegative',
-            zeroline=True
-        )
-    )
-
-    data = Data([
-         go.Bar(
-             x=temp_df.groupby('created_date_wo_time', as_index = False).count()['created_date_wo_time'],
-             y=temp_df.groupby('created_date_wo_time', as_index = False).count()['latitude']
-         )
-     ])
-
-    return go.Figure(data=data, layout=layout)
+# @app.callback(
+#     Output('bar-graph1', 'figure'),
+#     [Input('map-graph', 'selectedData'),
+#      Input('datatable', 'data')])
+# def update_figure(rows,dataframe):
+#     aux = pd.DataFrame(dataframe)
+#     if rows is None:
+#         temp_df = aux
+#     else:
+#         selected_row_indices = []
+#         for i in rows['points']:
+#             selected_row_indices.append(i['pointIndex'])
+#
+#         temp_df = aux[aux.index.isin(selected_row_indices)]
+#     layout = go.Layout(
+#         bargap=0.05,
+#         bargroupgap=0,
+#         barmode='group',
+#         showlegend=False,
+#         title='Complaints grouped by date',
+#         dragmode="select",
+#         xaxis=dict(
+#             showgrid=False,
+#             nticks=50,
+#             fixedrange=False
+#         ),
+#         yaxis=dict(
+#             showticklabels=True,
+#             showgrid=False,
+#             fixedrange=False,
+#             rangemode='nonnegative',
+#             zeroline=True
+#         )
+#     )
+#
+#     data = Data([
+#          go.Bar(
+#              x=temp_df.groupby('created_date_wo_time', as_index = False).count()['created_date_wo_time'],
+#              y=temp_df.groupby('created_date_wo_time', as_index = False).count()['latitude']
+#          )
+#      ])
+#
+#     return go.Figure(data=data, layout=layout)
 
 @app.callback(
     Output('heatmap', 'figure'),
     [Input('map-graph', 'selectedData'),
     Input('map-graph', 'relayoutData'),
-     Input('datatable', 'data')])
-def update_figure(rows, x, dataframe):
+     Input('datatable', 'data'),
+     Input('radio-button','value'),
+     Input('bar-graph', 'selectedData')])
+def update_figure(rows, x, dataframe, radio_button, type_filter):
     try:
         latitude = [float(i[1]) for i in dict(x)['mapbox._derived']['coordinates']]
         longitude = [float(i[0]) for i in dict(x)['mapbox._derived']['coordinates']]
@@ -842,6 +893,10 @@ def update_figure(rows, x, dataframe):
             selected_row_indices.append(i['pointIndex'])
 
         temp_df = aux[aux.index.isin(selected_row_indices)]
+    if type_filter is not None:
+        selected_dates = [(point["y"]) for point in type_filter["points"]]
+        temp_df = temp_df[temp_df['cleaned_descriptor'].isin(selected_dates)]
+
     layout = go.Layout(
         bargap=0.05,
         bargroupgap=0,
@@ -864,24 +919,56 @@ def update_figure(rows, x, dataframe):
     )
 
 
-    def df_to_plotly(df):
-        ref_df = df.groupby(by=['created_date_wo_time', 'complaint_code']).count().reset_index()[
-            ['created_date_wo_time', 'complaint_code', 'latitude']]
-        filling_records_df = pd.DataFrame(columns=['created_date_wo_time', 'complaint_code', 'latitude'])
+    def df_to_plotly(df,radio_button):
+        # Normalizing
+        temp_df = df.groupby(by=['complaint_code','created_date_wo_time']).count().reset_index()
+        temp_grp = temp_df.groupby('complaint_code')
+        temp_df['mean'] = temp_grp.transform('mean')['borough']
+        temp_df['std'] = temp_grp.transform('std')['borough']
+        temp_df['latitude'] = (temp_df['longitude'] - temp_df['mean']) / temp_df['std']
+        temp_grp1 = temp_df.groupby('complaint_code')
+        temp_df['latitude'] = temp_df['latitude'] - temp_grp1.transform('min')['latitude']
+        print(temp_df.columns)
+        ref_df = temp_df[['created_date_wo_time', 'complaint_code', 'latitude','longitude']]
+        # Closing block
+        # ref_df = df.groupby(by=['created_date_wo_time', 'complaint_code']).count().reset_index()[
+        #     ['created_date_wo_time', 'complaint_code', 'latitude']]
+        filling_records_df = pd.DataFrame(columns=['created_date_wo_time', 'complaint_code', 'latitude', 'longitude'])
         for i in ref_df['created_date_wo_time'].unique():
             for j in ref_df['complaint_code'].unique():
                 filling_records_df = filling_records_df.append(
-                    {'created_date_wo_time': i, 'complaint_code': j, 'latitude': 0}, ignore_index=True)
+                    {'created_date_wo_time': i, 'complaint_code': j, 'latitude': 0,'longitude':0}, ignore_index=True)
         filled_df = pd.concat([ref_df, filling_records_df]).groupby(
             by=['created_date_wo_time', 'complaint_code']).sum().reset_index()
-        return {'z': filled_df['latitude'].tolist(),
-                'x': filled_df['created_date_wo_time'].tolist(),
-                'y': filled_df['complaint_code'].tolist()}
-    heatmap1 = go.Figure(data=go.Heatmap(df_to_plotly(temp_df)),
+
+        if radio_button == 'MTL':
+            return {'z': filled_df['longitude'].tolist(),
+                    'x': filled_df['created_date_wo_time'].tolist(),
+                    'y': filled_df['complaint_code'].tolist(),
+                    'colorscale': 'Blues',
+                    'text': "Number of complaints: " + filled_df['longitude'].map(str) +
+                            "<br>" + "Date: " + filled_df['created_date_wo_time'].map(str),
+                    'hoverinfo': 'text'}
+        else:
+            return {'z': filled_df['latitude'].tolist(),
+                    'x': filled_df['created_date_wo_time'].tolist(),
+                    'y': filled_df['complaint_code'].tolist(),
+                    'colorscale':'Blues',
+                    'text': "Number of complaints: " + filled_df['longitude'].map(str) +
+                            "<br>" + "Date: " + filled_df['created_date_wo_time'].map(str),
+                    'hoverinfo':'text'}
+    heatmap1 = go.Figure(data=go.Heatmap(df_to_plotly(temp_df,radio_button)),
                          layout=go.Layout(title='Heatmap'))
     return heatmap1
 
 
+@app.callback(Output("loading-icon1", "children"))
+def input_triggers_spinner1():
+    return
+
+@app.callback(Output("loading-icon2", "children"))
+def input_triggers_spinner2():
+    return
 
 if __name__ == '__main__':
     app.run_server(debug=False)
