@@ -378,16 +378,16 @@ def gen_lines(lat, lon, map_data, start_date = None, end_date = None):
     #     "layout": layout_map
     # }
 
-def generate_table(dataframe, max_rows=10):
-    return html.Table(
-        # Header
-        [html.Tr([html.Th(col) for col in dataframe.columns])] +
-
-        # Body
-        [html.Tr([
-            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-        ]) for i in range(min(len(dataframe), max_rows))]
-    )
+# def generate_table(dataframe, max_rows=10):
+#     return html.Table(
+#         # Header
+#         [html.Tr([html.Th(col) for col in dataframe.columns])] +
+#
+#         # Body
+#         [html.Tr([
+#             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+#         ]) for i in range(min(len(dataframe), max_rows))]
+#     )
 # Selecting only required columns
 
 # Boostrap CSS.
@@ -426,13 +426,13 @@ app.layout = html.Div(
                         ''',
                         className='nine columns'
                 ),
-                html.Div([dcc.RadioItems(id='radio-button',
-                    options=[
-                        {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
-                        {'label': 'Regular Heatmap', 'value': 'MTL'}
-                    ],
-                    value='MTL'
-                )], className= "nine columns")
+                # html.Div([dcc.RadioItems(id='radio-button',
+                #     options=[
+                #         {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
+                #         {'label': 'Regular Heatmap', 'value': 'MTL'}
+                #     ],
+                #     value='MTL'
+                # )], className= "nine columns")
             ], className="row"
         ),
 
@@ -490,7 +490,7 @@ html.Div(
             html.Div([dcc.Loading(id="loading-icon2",
                 children=[dcc.Graph(id='bar-graph',
                           animate = False,
-                                    style = {'margin-top': '20'})
+                                    style={'margin-top': '20'})
 ],type="default")], className="six columns"),
             # html.Div([dcc.Graph(id='bar-graph',
             #       animate=False,
@@ -517,6 +517,13 @@ html.Div(
 #     ], className="six columns"
 # )],className='row'),
 # \Working previous block
+html.Div([dcc.RadioItems(id='radio-button',
+                    options=[
+                        {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
+                        {'label': 'Regular Heatmap', 'value': 'MTL'}
+                    ],
+                    value='MTL'
+                )], className= "row"),
 html.Div([dcc.Loading(id="loading-icon1",
         children=[dcc.Graph(id='heatmap')],type="default")], className='row'),
 
@@ -532,9 +539,9 @@ html.Div(
     row_selectable='multi',
     style_table={
         'maxHeight': '300px',
-        'overflowY': 'scroll'
+        'overflowY': 'auto'
     }
-)
+),  style={'display': 'none'}
                 )
 #Testing block closed
 ]))
