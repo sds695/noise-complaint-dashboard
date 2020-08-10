@@ -1,4 +1,5 @@
 import dash
+from textwrap import dedent
 import time
 import dash_core_components as dcc
 import dash_html_components as html
@@ -16,6 +17,7 @@ import json
 import urllib.request
 from shapely.wkt import loads
 from fiona.crs import from_epsg
+import dash_bootstrap_components as dbc
 
 
 
@@ -64,7 +66,7 @@ layout_map = dict(
     )
 )
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP,'https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
@@ -98,17 +100,14 @@ def return_complaint_data(start=None, end=None, searchstr='Noise', agency='DEP',
     filter_statement = 'starts_with(complaint_type, "' + searchstr + '")' + \
                        ' and created_date > "' + earlier_time + '"' + \
                        ' and created_date < "' + current_time + '"' + \
-                       ' and agency = "' + agency + '"' #+ \
-                       #' and ' + str(range_str) + '(location, ' + str(location_data) + ')'
+                       ' and agency = "' + agency + '"'
+
     select_statement = 'created_date,descriptor,' \
                        'borough,' \
                        'latitude,' \
                        'longitude'
 
-    # select_statement = 'created_date,closed_date,agency,agency_name,complaint_type,descriptor,location_type,' \
-    #                    'incident_zip,city,borough,' \
-    #                    'status,due_date,latitude,' \
-    #                    'longitude,location '
+
 
     results = client.get('erm2-nwe9',
                          limit=100000000,
@@ -316,84 +315,6 @@ def gen_lines(lat, lon, map_data, start_date = None, end_date = None):
 
     return{"data": main_dict_list, "layout": layout_map}
 
-    # Working return statement
-    # return {
-    #     "data": [{
-    #             "type": "scattermapbox",
-    #             "lat": lat,
-    #             "lon": lon,
-    #             "hoverinfo": "text",
-    #             "mode": "lines",
-    #             "line":{"color":"MediumPurple", "width": 13},
-    #             "marker": {
-    #                 "size": 15,
-    #                 "opacity": 0.7
-    #             },
-    #             "selected":{
-    #                 "marker":{
-    #                     "color":'red'
-    #                 }
-    #             }
-    #
-    #     },
-    #         {
-    #             "type": "scattermapbox",
-    #             "lat": [40.72135363269204, 40.72174410248905],
-    #             "lon": [-74.0046351627455, -74.00522716172279],
-    #             "hoverinfo": "text",
-    #             "mode": "lines",
-    #             "line": {"color": "MediumPurple"},
-    #             "marker": {
-    #                 "size": 15,
-    #                 "opacity": 0.7
-    #             },
-    #             "selected": {
-    #                 "marker": {
-    #                     "color": 'red'
-    #                 }
-    #             },
-    #
-    #         },
-    #         {
-    #             "type": "scattermapbox",
-    #             "lat": list(map_data['latitude']),
-    #             "lon": list(map_data['longitude']),
-    #             "hoverinfo": "text",
-    #             "hovertext": [["Descriptor: {} <br>Created Date: {}".format(i, j)]
-    #                           for i, j in zip(map_data['descriptor'], map_data['created_date_wo_time'])],
-    #             "mode": "markers",
-    #             "name": list(map_data['descriptor']),
-    #             "marker": {
-    #                 "size": 6,
-    #                 "opacity": 0.7
-    #             },
-    #             "selected": {
-    #                 "marker": {
-    #                     "color": 'red'
-    #                 }
-    #             }
-    #
-    #         }
-    #     ],
-    #     "layout": layout_map
-    # }
-
-# def generate_table(dataframe, max_rows=10):
-#     return html.Table(
-#         # Header
-#         [html.Tr([html.Th(col) for col in dataframe.columns])] +
-#
-#         # Body
-#         [html.Tr([
-#             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-#         ]) for i in range(min(len(dataframe), max_rows))]
-#     )
-# Selecting only required columns
-
-# Boostrap CSS.
-# app.css.append_css({'external_url': 'https://codepen.io/amyoshino/pen/jzXypZ.css'})
-
-
 
 layout_table = dict(
     autosize=True,
@@ -414,7 +335,9 @@ layout_table = dict(
 layout_table['font-size'] = '12'
 layout_table['margin-top'] = '20'
 
-app.layout = html.Div(
+app.layout = html.Div([
+    dcc.Tabs(id='tabs-example', value='tab-1', children=[
+        dcc.Tab(label='Tab one', value='tab-1',children=[html.Div(
     html.Div([
         html.Div(
             [
@@ -426,24 +349,15 @@ app.layout = html.Div(
                         ''',
                         className='nine columns'
                 ),
-                # html.Div([dcc.RadioItems(id='radio-button',
-                #     options=[
-                #         {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
-                #         {'label': 'Regular Heatmap', 'value': 'MTL'}
-                #     ],
-                #     value='MTL'
-                # )], className= "nine columns")
             ], className="row"
         ),
-
-        # Selectors
         html.Div(
             [
                 html.Div(
                     [
                         html.P('Choose Boroughs:'),
                         dcc.Checklist(
-                                id = 'boroughs',
+                                id='boroughs',
                                 options=[
                                     {'label': 'Manhattan', 'value': 'MANHATTAN'},
                                     {'label': 'Bronx', 'value': 'BRONX'},
@@ -486,50 +400,44 @@ html.Div(
                                   style={'margin-top': '20'})
                     ], className="six columns"
                 ),
-#Testing
             html.Div([dcc.Loading(id="loading-icon2",
                 children=[dcc.Graph(id='bar-graph',
                           animate = False,
                                     style={'margin-top': '20'})
 ],type="default")], className="six columns"),
-            # html.Div([dcc.Graph(id='bar-graph',
-            #       animate=False,
-            #       style={'margin-top': '20'})
-            #          ], className= "six columns"
-            # )
-#Testing block closed
         ],className='row',
         style = {"margin-top":20}),
-#Testing block
-# Working previous block
-# html.Div([html.Div(
-#     [
-#             dcc.Graph(id='bar-graph1',
-#             animate=False,
-#             style={'margin-top': '20'})
-#     ],className='six columns'
-# ),
-# html.Div(
-#     [
-#         dcc.Graph(id='bar-graph',
-#                   animate=False,
-#                   style={'margin-top': '20'})
-#     ], className="six columns"
-# )],className='row'),
-# \Working previous block
+
 html.Div([dcc.RadioItems(id='radio-button',
                     options=[
                         {'label': 'Heatmap normalized by complaint type', 'value': 'NYC'},
                         {'label': 'Regular Heatmap', 'value': 'MTL'}
                     ],
                     value='MTL'
-                )], className= "row"),
+                )], className="row"),
+html.Div(children=[html.H3('Heatmap'),
+            html.Img(
+            id='heatmap-info',
+            src="assets/question-circle-solid.svg",
+            n_clicks=0,
+            style={'height': '15px', 'width': '15px'}
+        ),
+        dbc.Modal(
+            [
+                dbc.ModalHeader("Header"),
+                dbc.ModalBody(
+                    "You can paste instructions here"
+                ),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-heatmap-info", className="ml-auto"
+                    )
+                ),
+            ],
+            id="modal-heatmap",
+        ),],className="row"),
 html.Div([dcc.Loading(id="loading-icon1",
-        children=[dcc.Graph(id='heatmap')],type="default")], className='row'),
-
-# html.Div([
-#     html.Div([dcc.Graph(id='heatmap')])
-#           ],className='row'),
+        children=[dcc.Graph(id='heatmap')], type="default")]),
 
 html.Div(
     dash_table.DataTable(
@@ -542,9 +450,12 @@ html.Div(
         'overflowY': 'auto'
     }
 ),  style={'display': 'none'}
-                )
-#Testing block closed
-]))
+                ),
+]),style={'padding': '0px 20px 20px 20px'})]),
+                dcc.Tab(label='Tab two', value='tab-2'),
+            ]),
+            html.Div(id='tabs-example-content')
+        ])
 
 @app.callback(
     Output('datatable', 'data'),
@@ -562,73 +473,6 @@ def update_selected_row_indices(type, borough):
     rows = map_aux.to_dict('records')
     return rows
 
-# @app.callback(
-#     Output('datatable1', 'data'),
-#     [Input('boroughs', 'value')])
-# def update_selected_row_indices1(borough):
-#     rows = test_df.to_dict('records')
-#     return rows
-
-# Working map-graph
-# @app.callback(
-#     Output('map-graph', 'figure'),
-#     [Input('datatable', 'data'),
-#      Input('datatable', 'selected_rows'),
-#      Input('bar-graph1', 'selectedData'),
-#      Input('heatmap', 'relayoutData')])
-# def map_selection(rows, selected_row_indices, date_filter, heatmap_filter):
-#     if date_filter is None:
-#         aux = pd.DataFrame(rows)
-#         if selected_row_indices is None:
-#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
-#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],aux)
-#         elif len(selected_row_indices) == 0:
-#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
-#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],aux)
-#         else:
-#             temp_df = aux[aux.index.isin(selected_row_indices)]
-#             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
-#                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],temp_df)
-#     else:
-#         print(date_filter)
-#         if heatmap_filter is None:
-#             pass
-#         else:
-#             print('Heatmap selected ' + str(heatmap_filter))
-#             heatmap_selected_startdate = str(dict(heatmap_filter)['xaxis.range[0]']).split(' ')[0]
-#             heatmap_selected_enddate = str(dict(heatmap_filter)['xaxis.range[1]']).split(' ')[0]
-#             print(heatmap_selected_startdate)
-#         aux = pd.DataFrame(rows)
-#         selected_dates = [(point["x"]) for point in date_filter["points"]]
-#         print()
-#         if selected_row_indices is None:
-#             # return gen_lines(
-#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#             #     aux, min(selected_dates), max(selected_dates))
-#             return gen_lines(
-#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#                 aux, heatmap_selected_startdate, heatmap_selected_enddate)
-#         elif len(selected_row_indices) == 0:
-#             # return gen_lines(
-#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#             #     aux, min(selected_dates), max(selected_dates))
-#             return gen_lines(
-#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#                 aux, heatmap_selected_startdate, heatmap_selected_enddate)
-#         else:
-#             temp_df = aux[aux.index.isin(selected_row_indices)]
-#             # return gen_lines(
-#             #     [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#             #     [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#             #     temp_df, min(selected_dates), max(selected_dates))
-#             return gen_lines(
-#                 [40.71626221912999, 40.71638549163064, 40.71659288087297, 40.71697279046784, 40.71716166759111],
-#                 [-73.80183790285439, -73.80099807258648, -73.8000012064612, -73.79864308775468, -73.79796193139329],
-#                 temp_df, heatmap_selected_startdate, heatmap_selected_enddate)
 
 @app.callback(
     Output('map-graph', 'figure'),
@@ -679,49 +523,6 @@ def map_selection(rows, selected_row_indices, heatmap_filter, type_filter):
             return gen_lines([40.71626221912999,40.71638549163064,40.71659288087297,40.71697279046784,40.71716166759111],
                           [-73.80183790285439,-73.80099807258648,-73.8000012064612,-73.79864308775468,-73.79796193139329],temp_df)
 
-
-# @app.callback(
-#     Output('bar-graph', 'figure'),
-#     [Input('datatable', 'data'),
-#      Input('datatable', 'selected_rows')])
-# def update_figure(rows, selected_row_indices):
-#
-#     if selected_row_indices is None:
-#         dff = pd.DataFrame(rows)
-#     else:
-#         temp_df = pd.DataFrame(rows)
-#         dff = temp_df[temp_df.index.isin(selected_row_indices)]
-#
-#
-#     layout = go.Layout(
-#         bargap=0.05,
-#         bargroupgap=0,
-#         barmode='group',
-#         showlegend=False,
-#         dragmode="select",
-#         title='Complaints grouped by descriptor',
-#         xaxis=dict(
-#             showgrid=False,
-#             nticks=50,
-#             fixedrange=False
-#         ),
-#         yaxis=dict(
-#             showticklabels=True,
-#             showgrid=False,
-#             fixedrange=False,
-#             rangemode='nonnegative',
-#             zeroline=True
-#         )
-#     )
-#
-#     data = Data([
-#          go.Bar(
-#              x=dff.groupby('complaint_code', as_index = False).count()['complaint_code'],
-#              y=dff.groupby('complaint_code', as_index = False).count()['latitude']
-#          )
-#      ])
-#
-#     return go.Figure(data=data, layout=layout)
 
 @app.callback(
     Output('bar-graph', 'figure'),
@@ -797,78 +598,6 @@ def update_figure(rows, dataframe, x):
 
     return go.Figure(data=data, layout=layout)
 
-# @app.callback(
-#     Output('summary1', 'children'),
-#     [Input('map-graph', 'selectedData')])
-# def update_summary1(rows):
-#     if rows is None:
-#         return("The number of street permits are " + str(len(permit_data_gdf)))
-#     else:
-#         selected_row_indices = []
-#         for i in rows['points']:
-#             selected_row_indices.append(i['pointIndex'])
-#         print("The number of selected street permits are ")
-#         print(permit_data_gdf[permit_data_gdf.index.isin(selected_row_indices)]['PermitNumber'])
-#         return("The number of street permits are " +str(len(permit_data_gdf[permit_data_gdf.index.isin(selected_row_indices)].drop_duplicates(subset=['PermitNumber']))))
-#
-# @app.callback(
-#     Output('summary2', 'children'),
-#     [Input('map-graph', 'selectedData')])
-# def update_summary2(rows):
-#     if rows is None:
-#         return ("The number of complaints are " + str(len(map_data)))
-#     else:
-#         selected_row_indices = []
-#         for i in rows['points']:
-#             selected_row_indices.append(i['pointIndex'])
-#
-#         temp_df = map_data[map_data.index.isin(selected_row_indices)]
-#         return("The number of complaints are" + str(len(temp_df)))
-
-
-# @app.callback(
-#     Output('bar-graph1', 'figure'),
-#     [Input('map-graph', 'selectedData'),
-#      Input('datatable', 'data')])
-# def update_figure(rows,dataframe):
-#     aux = pd.DataFrame(dataframe)
-#     if rows is None:
-#         temp_df = aux
-#     else:
-#         selected_row_indices = []
-#         for i in rows['points']:
-#             selected_row_indices.append(i['pointIndex'])
-#
-#         temp_df = aux[aux.index.isin(selected_row_indices)]
-#     layout = go.Layout(
-#         bargap=0.05,
-#         bargroupgap=0,
-#         barmode='group',
-#         showlegend=False,
-#         title='Complaints grouped by date',
-#         dragmode="select",
-#         xaxis=dict(
-#             showgrid=False,
-#             nticks=50,
-#             fixedrange=False
-#         ),
-#         yaxis=dict(
-#             showticklabels=True,
-#             showgrid=False,
-#             fixedrange=False,
-#             rangemode='nonnegative',
-#             zeroline=True
-#         )
-#     )
-#
-#     data = Data([
-#          go.Bar(
-#              x=temp_df.groupby('created_date_wo_time', as_index = False).count()['created_date_wo_time'],
-#              y=temp_df.groupby('created_date_wo_time', as_index = False).count()['latitude']
-#          )
-#      ])
-#
-#     return go.Figure(data=data, layout=layout)
 
 @app.callback(
     Output('heatmap', 'figure'),
@@ -903,27 +632,6 @@ def update_figure(rows, x, dataframe, radio_button, type_filter):
     if type_filter is not None:
         selected_dates = [(point["y"]) for point in type_filter["points"]]
         temp_df = temp_df[temp_df['cleaned_descriptor'].isin(selected_dates)]
-
-    layout = go.Layout(
-        bargap=0.05,
-        bargroupgap=0,
-        barmode='group',
-        showlegend=False,
-        title='Complaints grouped by date',
-        dragmode="select",
-        xaxis=dict(
-            showgrid=False,
-            nticks=50,
-            fixedrange=False
-        ),
-        yaxis=dict(
-            showticklabels=True,
-            showgrid=False,
-            fixedrange=False,
-            rangemode='nonnegative',
-            zeroline=True
-        )
-    )
 
 
     def df_to_plotly(df,radio_button):
@@ -965,7 +673,7 @@ def update_figure(rows, x, dataframe, radio_button, type_filter):
                             "<br>" + "Date: " + filled_df['created_date_wo_time'].map(str),
                     'hoverinfo':'text'}
     heatmap1 = go.Figure(data=go.Heatmap(df_to_plotly(temp_df,radio_button)),
-                         layout=go.Layout(title='Heatmap'))
+                         layout=go.Layout())
     return heatmap1
 
 
@@ -976,6 +684,17 @@ def input_triggers_spinner1():
 @app.callback(Output("loading-icon2", "children"))
 def input_triggers_spinner2():
     return
+
+
+@app.callback(
+    Output("modal-heatmap", "is_open"),
+    [Input("heatmap-info", "n_clicks"), Input("close-heatmap-info", "n_clicks")],
+    [State("modal-heatmap", "is_open")],
+)
+def toggle_modal1(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 if __name__ == '__main__':
     app.run_server(debug=False)
