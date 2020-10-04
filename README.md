@@ -7,3 +7,4 @@ project with support from Charlie Mydlarz and Graham Dove
 The info buttons next to each plot will provide further details on how it can be filtered or interacted with. 
 
 # Example Walkthrough
+![alt text](https://github.com/sds695/noise-complaint-dashboard/tree/master/walkthrough/bar_filter.gif)
