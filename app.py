@@ -171,38 +171,6 @@ permit_data_gdf = return_construction_permits()
 print(map_data.head())
 
 
-def gen_map(map_data):
-    '''
-    Create the dictionary to display the noise complaints points using dash.
-    :param map_data: Geodataframe with location data of the noise complaints
-    :return: The dictionary that is used for showing this information on dash
-    '''
-    # groupby returns a dictionary mapping the values of the first field
-    # 'classification' onto a list of record dictionaries with that
-    # classification value.
-    return {
-        "data": [{
-            "type": "scattermapbox",
-            "lat": list(map_data['latitude']),
-            "lon": list(map_data['longitude']),
-            "hoverinfo": "text",
-            "hovertext": [["Descriptor: {} <br>Created Date: {}".format(i, j)]
-                          for i, j in zip(map_data['descriptor'], map_data['created_date_wo_time'])],
-            "mode": "markers+lines",
-            "name": list(map_data['descriptor']),
-            "marker": {
-                "size": 4,
-                "opacity": 0.3
-            },
-            "selected": {
-                "marker": {
-                    "color": 'red'
-                }
-            }
-
-        }],
-        "layout": layout_map
-    }
 
 
 def gen_lines(map_data, start_date=None, end_date=None):
@@ -699,48 +667,6 @@ def update_figure(rows, dataframe, radio_button, type_filter):
         selected_dates = [(point["y"]) for point in type_filter["points"]]
         temp_df = temp_df[temp_df['cleaned_descriptor'].isin(selected_dates)]
 
-    # def df_to_plotly(df, radio_button):
-    #     # Normalizing
-    #     temp_df = df.groupby(by=['complaint_code', 'created_date_wo_time']).count().reset_index()
-    #     temp_grp = temp_df.groupby('complaint_code')
-    #     temp_df['mean'] = temp_grp.transform('mean')['borough']
-    #     temp_df['std'] = temp_grp.transform('std')['borough']
-    #     temp_df['latitude'] = (temp_df['longitude'] - temp_df['mean']) / temp_df['std']
-    #     temp_grp1 = temp_df.groupby('complaint_code')
-    #     temp_df['latitude'] = temp_df['latitude'] - temp_grp1.transform('min')['latitude']
-    #     print(temp_df.columns)
-    #     ref_df = temp_df[['created_date_wo_time', 'complaint_code', 'latitude', 'longitude']]
-    #     # Closing block
-    #     # ref_df = df.groupby(by=['created_date_wo_time', 'complaint_code']).count().reset_index()[
-    #     #     ['created_date_wo_time', 'complaint_code', 'latitude']]
-    #     filling_records_df = pd.DataFrame(columns=['created_date_wo_time', 'complaint_code', 'latitude', 'longitude'])
-    #     for i in ref_df['created_date_wo_time'].unique():
-    #         for j in ref_df['complaint_code'].unique():
-    #             filling_records_df = filling_records_df.append(
-    #                 {'created_date_wo_time': i, 'complaint_code': j, 'latitude': 0, 'longitude': 0}, ignore_index=True)
-    #     filled_df = pd.concat([ref_df, filling_records_df]).groupby(
-    #         by=['created_date_wo_time', 'complaint_code']).sum().reset_index()
-    #
-    #     if radio_button == 'MTL':
-    #         return {'z': filled_df['longitude'].tolist(),
-    #                 'x': filled_df['created_date_wo_time'].tolist(),
-    #                 'y': filled_df['complaint_code'].tolist(),
-    #                 'colorscale': 'Blues',
-    #                 'text': "Number of complaints: " + filled_df['longitude'].map(str) +
-    #                         "<br>" + "Date: " + filled_df['created_date_wo_time'].map(str),
-    #                 'hoverinfo': 'text'}
-    #     else:
-    #         return {'z': filled_df['latitude'].tolist(),
-    #                 'x': filled_df['created_date_wo_time'].tolist(),
-    #                 'y': filled_df['complaint_code'].tolist(),
-    #                 'colorscale': 'Blues',
-    #                 'text': "Number of complaints: " + filled_df['longitude'].map(str) +
-    #                         "<br>" + "Date: " + filled_df['created_date_wo_time'].map(str),
-    #                 'hoverinfo': 'text'}
-    #
-    # heatmap1 = go.Figure(data=go.Heatmap(df_to_plotly(temp_df, radio_button)),
-    #                      layout=go.Layout())
-    # return heatmap1
 
     def df_to_plotly(df, radio_button):
         temp_df = df.groupby(by=['complaint_code', 'created_date_wo_time']).count().reset_index()
