@@ -42,7 +42,7 @@ parso==0.3.1
 patsy==0.5.1
 pgmpy==0.1.7
 pickleshare==0.7.5
-Pillow==6.2.1
+Pillow==8.2.0
 plotly==4.4.1
 py4j==0.10.7
 requests==2.21.0
@@ -108,7 +108,7 @@ parso==0.3.1
 patsy==0.5.1
 pgmpy==0.1.7
 pickleshare==0.7.5
-Pillow==6.2.1
+Pillow==8.2.0
 plotly==4.4.1
 py4j==0.10.7
 requests==2.21.0
