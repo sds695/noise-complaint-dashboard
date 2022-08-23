@@ -27,7 +27,7 @@ mistune==0.8.4
 mrjob==0.6.7
 munch==2.3.2
 mysql-connector-python==8.0.18
-nbconvert==5.6.1
+nbconvert==6.5.1
 nbformat==4.4.0
 networkx==1.11
 newsapi-python==0.2.6
@@ -93,7 +93,7 @@ mistune==0.8.4
 mrjob==0.6.7
 munch==2.3.2
 mysql-connector-python==8.0.18
-nbconvert==5.6.1
+nbconvert==6.5.1
 nbformat==4.4.0
 networkx==1.11
 newsapi-python==0.2.6
